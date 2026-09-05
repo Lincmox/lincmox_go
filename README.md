@@ -294,6 +294,63 @@ git tag v2.0.0-rc1  # release candidate (→ testing channel)
 
 ---
 
+## Deploying
+
+The project is built and packaged automatically by **Gitea Actions** (Gitea CI/CD).
+Pushing to the `dev` branch or tagging a release triggers a pipeline that produces
+Debian packages and publishes them to the LincMox repositories.
+
+### 1. Pushing to `dev` (snapshot)
+
+Any push to the `dev` branch builds a **snapshot** package:
+
+```
+2.0.0~dev+<short-sha>
+```
+
+- **Channel**: `testing`
+- It is uploaded to the **Gitea Debian registry** (`trixie/testing`).
+- Old `~dev+` packages are automatically cleaned up (only the current one is kept).
+
+### 2. Tagging a release (stable or release candidate)
+
+```bash
+git tag v2.0.0      # stable release
+git push origin v2.0.0
+```
+
+The workflow `determine-build-env` extracts the version, channel and Debian branch:
+
+| Ref | Package version | Channel | Debian branch |
+|---|---|---|---|
+| push on `dev` | `2.0.0~dev+<sha>` | `testing` | `dev` |
+| tag `v2.0.0-rc1` | `2.0.0~rc1` | `testing` | `dev` |
+| tag `v2.0.0` | `2.0.0` | `main` | `dev` |
+
+Any tag containing `alpha`, `beta`, `rc` or `dev` → **testing**; otherwise → **main**.
+
+### Workflow output (`.gitea/workflows/build.yml`)
+
+1. `gbp dch` generates the Debian changelog from commits.
+2. `dpkg-buildpackage` builds two binary packages:
+   - **`lincmox_<version>_amd64.deb`** — CLI (`/usr/bin/lincmox`)
+   - **`lincmoxd_<version>_amd64.deb`** — daemon + REST API + Web UI
+     (`/usr/bin/lincmoxd`, systemd unit)
+3. `push-to-registry` uploads all `.deb` files to the **Gitea Debian registry**
+   (pool `trixie/<channel>`).
+4. On **main** channel only, `publish-to-prod-repository` commits the `.deb` files
+   into **`lincmox_repo`** (`packages/main/`), which rebuilds and redeploys the
+   production APT server (`repo.lincmox.ovh`).
+
+Install from the production APT server:
+```bash
+sudo apt install lincmox lincmoxd
+```
+
+---
+
+## Acknowledgements
+
 ## Acknowledgements
 
 Thanks to the reverse engineering work from:
