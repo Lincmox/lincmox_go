@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const socketPath = "/run/lincmoxd.sock"
+const socketPath = "/run/lincmoxd/lincmoxd.sock"
 
 // Context keys — unexported to avoid collisions.
 type deviceKey struct{}
@@ -36,7 +36,7 @@ func newRootCmd() *cobra.Command {
 
 LincMox hardware controller — controls LEDs and LED strip.
 
-When /run/lincmoxd.sock is present the CLI acts as an HTTP client
+When /run/lincmoxd/lincmoxd.sock is present the CLI acts as an HTTP client
 talking to the lincmoxd daemon over the Unix socket.
 Otherwise it drives the hardware directly.`,
 		SilenceUsage: true,

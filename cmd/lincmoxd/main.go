@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	defaultSockPath = "/run/lincmoxd.sock"
+	defaultSockPath = "/run/lincmoxd/lincmoxd.sock"
 	defaultTCPAddr  = ":8080"
 )
 

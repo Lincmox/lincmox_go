@@ -5,7 +5,7 @@ Documentation=https://doc.lincmox.ovh
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/lincmoxd --sock /run/lincmoxd.sock --addr :8080
+ExecStart=/usr/bin/lincmoxd --sock /run/lincmoxd/lincmoxd.sock --addr :8080
 Restart=on-failure
 RestartSec=5
 

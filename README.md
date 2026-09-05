@@ -55,7 +55,7 @@ go build -o bin/lincmoxd  ./cmd/lincmoxd
 ## CLI Usage — `lincmox`
 
 When `lincmoxd` is running, `lincmox` automatically routes all commands through the daemon's
-Unix socket (`/run/lincmoxd.sock`). No configuration needed.
+Unix socket (`/run/lincmoxd/lincmoxd.sock`). No configuration needed.
 
 ### LED control
 
@@ -157,7 +157,7 @@ Combine with `--verbose` to confirm which bus was used.
 sudo systemctl enable --now lincmoxd
 
 # Manual
-lincmoxd --addr :8080 --sock /run/lincmoxd.sock
+lincmoxd --addr :8080 --sock /run/lincmoxd/lincmoxd.sock
 
 # Simulation mode
 lincmoxd --simulate
@@ -165,7 +165,7 @@ lincmoxd --simulate
 
 ### REST API
 
-Base URL: `http://<host>:8080` or via Unix socket at `/run/lincmoxd.sock`.
+Base URL: `http://<host>:8080` or via Unix socket at `/run/lincmoxd/lincmoxd.sock`.
 
 #### LEDs
 
