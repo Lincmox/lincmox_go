@@ -10,13 +10,17 @@ BUILD_FLAGS = -ldflags="-s -w"
 %:
 	dh $@
 
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf bin/
+
 override_dh_auto_build:
-	go build $(BUILD_FLAGS) -o debian/lincmox   ./cmd/lincmox
-	go build $(BUILD_FLAGS) -o debian/lincmoxd  ./cmd/lincmoxd
+	go build $(BUILD_FLAGS) -o bin/lincmox   ./cmd/lincmox
+	go build $(BUILD_FLAGS) -o bin/lincmoxd  ./cmd/lincmoxd
 
 override_dh_auto_install:
-	install -D -m 755 debian/lincmox  debian/lincmox/usr/bin/lincmox
-	install -D -m 755 debian/lincmoxd debian/lincmoxd/usr/bin/lincmoxd
+	install -D -m 755 bin/lincmox  debian/lincmox/usr/bin/lincmox
+	install -D -m 755 bin/lincmoxd debian/lincmoxd/usr/bin/lincmoxd
 	install -D -m 644 debian/lincmoxd.service \
 		debian/lincmoxd/lib/systemd/system/lincmoxd.service
 
