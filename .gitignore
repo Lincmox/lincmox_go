@@ -1,0 +1,32 @@
+# Binaries
+bin/
+/lincmox
+/lincmoxd
+*.exe
+
+# Go build cache
+*.test
+*.out
+
+# Dependency directories
+vendor/
+
+# Mock I2C registers (dev mode)
+/tmp/lincstation_mock_registers.json
+
+# Web build output (generated — do not commit if built in CI)
+# web/dist/
+
+# Debian build artifacts
+debian/lincmox
+debian/lincmoxd
+debian/*.debhelper
+debian/*.log
+debian/files
+debian/.debhelper/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+

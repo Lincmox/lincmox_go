@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+export CGO_ENABLED = 0
+export GOOS = linux
+export GOARCH = amd64
+export GOFLAGS = -ldflags="-s -w"
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	go build $(GOFLAGS) -o debian/lincmox   ./cmd/lincmox
+	go build $(GOFLAGS) -o debian/lincmoxd  ./cmd/lincmoxd
+
+override_dh_auto_install:
+	install -D -m 755 debian/lincmox  debian/lincmox/usr/bin/lincmox
+	install -D -m 755 debian/lincmoxd debian/lincmoxd/usr/bin/lincmoxd
+	install -D -m 644 debian/lincmoxd.service \
+		debian/lincmoxd/lib/systemd/system/lincmoxd.service
+
+override_dh_auto_test:
+	go test ./...
+

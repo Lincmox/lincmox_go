@@ -1,0 +1,25 @@
+Source: lincmox
+Section: utils
+Priority: optional
+Maintainer: Florent GAUDIN <florent.gaudin@lincmox.ovh>
+Build-Depends: debhelper-compat (= 13), golang-go (>= 1.22)
+Standards-Version: 4.6.0
+Homepage: https://doc.lincmox.ovh
+
+Package: lincmox
+Architecture: amd64
+Depends: ${misc:Depends}
+Description: LincMox CLI — LincStation LED control for Proxmox VE
+ Command-line interface to control LincStation N1 LEDs via I2C.
+ When lincmoxd is running, commands are transparently routed through
+ its Unix socket instead of accessing the I2C bus directly.
+
+Package: lincmoxd
+Architecture: amd64
+Depends: ${misc:Depends}, lincmox
+Description: LincMox daemon — REST API and Web UI for LincStation LED control
+ Background daemon that exposes a REST API and an embedded Web UI
+ to control LincStation N1 LEDs. Includes background monitors that
+ can automatically drive LEDs based on system metrics (network
+ activity, disk I/O, etc.).
+
