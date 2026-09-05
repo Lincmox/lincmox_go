@@ -28,6 +28,7 @@ func newRootCmd() *cobra.Command {
 		tcpAddr  string
 		simulate bool
 		verbose  bool
+		busID    int
 	)
 
 	root := &cobra.Command{
@@ -39,7 +40,7 @@ It exposes a REST API and an embedded Web UI to control LincStation LEDs.
 When lincmoxd is running, the lincmox CLI automatically routes its commands
 through the daemon's Unix socket instead of accessing the I2C bus directly.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return run(sockPath, tcpAddr, simulate, verbose)
+			return run(sockPath, tcpAddr, simulate, verbose, busID)
 		},
 	}
 
@@ -47,11 +48,12 @@ through the daemon's Unix socket instead of accessing the I2C bus directly.`,
 	root.Flags().StringVar(&tcpAddr, "addr", defaultTCPAddr, "TCP address to listen on")
 	root.Flags().BoolVar(&simulate, "simulate", false, "Use mock I2C backend (no hardware required)")
 	root.Flags().BoolVar(&verbose, "verbose", false, "Enable verbose I2C logging")
+	root.Flags().IntVar(&busID, "bus", -1, "force the I2C bus number to use (default: auto-detect)")
 
 	return root
 }
 
-func run(sockPath, tcpAddr string, simulate, verbose bool) error {
+func run(sockPath, tcpAddr string, simulate, verbose bool, busID int) error {
 	// Build device options
 	var opts []lincstation.Option
 	if simulate || os.Getenv("LINCMOX_ENV") == "dev" {
@@ -59,6 +61,9 @@ func run(sockPath, tcpAddr string, simulate, verbose bool) error {
 	}
 	if verbose {
 		opts = append(opts, lincstation.WithVerbose())
+	}
+	if busID >= 0 {
+		opts = append(opts, lincstation.WithBusID(busID))
 	}
 
 	device, err := lincstation.NewDevice(opts...)

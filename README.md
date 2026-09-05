@@ -125,6 +125,27 @@ lincmox --simulate led power on white
 LINCMOX_ENV=dev lincmox led power on white
 ```
 
+### Debug / Verbose mode
+
+Use the `--verbose` flag to debug I2C communication. This will log the auto-detected bus, the target register, the hex values, and the result of the I2C transfer.
+
+```bash
+lincmox --verbose led network on white
+```
+
+### Forcing the I2C bus
+
+By default `lincmox` auto-detects the bus by probing `/dev/i2c-0` through `/dev/i2c-9`
+for a device at address `0x26`. If auto-detection fails but you know the device is
+present (e.g. it shows up in `i2cdetect -y <bus>`), you can force the bus number:
+
+```bash
+lincmox --bus 4 led network on white
+lincmoxd --bus 4
+```
+
+Combine with `--verbose` to confirm which bus was used.
+
 ---
 
 ## Daemon Usage — `lincmoxd`
