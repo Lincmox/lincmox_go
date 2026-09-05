@@ -986,8 +986,21 @@
             }
         }
         
-        // Initial setup
-        updateWireframe();
+        
+        async function initWireframeState() {
+            try {
+                const res = await api('/api/v1/state');
+                if (res && res.leds && res.strip) {
+                    currentState = { ...res.leds, strip: res.strip };
+                }
+            } catch (e) {
+                console.error("Erreur chargement etat:", e);
+            }
+            updateWireframe();
+            if (activeTarget) renderControlPanel();
+        }
+        initWireframeState();
+
 
 
         // ---------- Monitors ----------

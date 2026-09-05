@@ -38,6 +38,8 @@ func (c *LEDController) SetManual(led lincstation.LED, on bool, color lincstatio
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.states[led] = ledState{manualUntil: time.Now().Add(ttl)}
+	// Force l'arrêt du clignotement lors du passage en état statique (On ou Off)
+	c.device.BlinkLED(led, false)
 	return c.device.SetLED(led, on, color)
 }
 

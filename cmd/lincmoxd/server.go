@@ -19,6 +19,7 @@ type Server struct {
 	controller *LEDController
 	mux        *http.ServeMux
 	monitors   *MonitorManager
+	stateCache *DeviceState
 }
 
 // NewServer creates a new Server with the given Device.
@@ -29,6 +30,7 @@ func NewServer(device *lincstation.Device) *Server {
 		controller: controller,
 		mux:        http.NewServeMux(),
 		monitors:   NewMonitorManager(controller),
+		stateCache: NewDeviceState(),
 	}
 	s.registerRoutes()
 	return s
@@ -70,6 +72,9 @@ func (s *Server) registerRoutes() {
 
 	// Reset
 	s.mux.HandleFunc("/api/v1/reset", s.handleReset)
+
+	// State
+	s.mux.HandleFunc("/api/v1/state", s.handleState)
 
 	// Status
 	s.mux.HandleFunc("/api/v1/status", s.handleStatus)
@@ -185,6 +190,11 @@ func (s *Server) handleLEDAction(ledName, action string) http.HandlerFunc {
 			writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+		stateStr := "on"
+		if !on {
+			stateStr = "off"
+		}
+		s.stateCache.UpdateLED(ledName, req.Color, stateStr)
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	}
 }
@@ -213,6 +223,11 @@ func (s *Server) handleLEDBlink(ledName string) http.HandlerFunc {
 			writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+		stateStr := "blink"
+		if !req.Blink {
+			stateStr = "on"
+		}
+		s.stateCache.UpdateLED(ledName, "", stateStr)
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	}
 }
@@ -242,6 +257,7 @@ func (s *Server) handleStripAnimation(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.stateCache.UpdateStripAnim(req.Mode)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
@@ -267,6 +283,7 @@ func (s *Server) handleStripBrightness(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.stateCache.UpdateStripBrightness(req.Value)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
@@ -290,6 +307,7 @@ func (s *Server) handleStripColor(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.stateCache.UpdateStripColor(req.R, req.G, req.B)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
@@ -308,6 +326,7 @@ func (s *Server) handleStripLoopColor(loop int) http.HandlerFunc {
 			writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+		s.stateCache.UpdateStripLoop(loop, req.R, req.G, req.B)
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	}
 }
@@ -332,10 +351,26 @@ func (s *Server) handleReset(w http.ResponseWriter, r *http.Request) {
 	switch req.Mode {
 	case "full":
 		err = s.device.Reset()
+		if err == nil {
+			// reset state cache too
+			s.stateCache = NewDeviceState()
+		}
 	case "leds":
 		err = s.device.ResetLEDs()
+		if err == nil {
+			newState := NewDeviceState()
+			s.stateCache.Lock()
+			s.stateCache.LEDs = newState.LEDs
+			s.stateCache.Unlock()
+		}
 	case "strip":
 		err = s.device.ResetStrip()
+		if err == nil {
+			newState := NewDeviceState()
+			s.stateCache.Lock()
+			s.stateCache.Strip = newState.Strip
+			s.stateCache.Unlock()
+		}
 	default:
 		writeError(w, http.StatusBadRequest, "mode must be full, leds or strip")
 		return
@@ -348,6 +383,17 @@ func (s *Server) handleReset(w http.ResponseWriter, r *http.Request) {
 }
 
 // --- Status Handler ---
+
+
+func (s *Server) handleState(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "GET required")
+		return
+	}
+	s.stateCache.RLock()
+	defer s.stateCache.RUnlock()
+	writeJSON(w, http.StatusOK, s.stateCache)
+}
 
 func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
