@@ -124,6 +124,26 @@ func detectBus(verbose bool) (int, error) {
 			}
 			if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, fd.Fd(), I2C_SMBUS, uintptr(unsafe.Pointer(&smbus))); errno == 0 {
 				found = true
+			} else {
+				// Finally, probe with a real SMBus register write (command byte +
+				// data byte), the exact protocol the LincStation controller
+				// answers. A bare write NACKs, and some adapters (Synopsys
+				// DesignWare) reject the zero-length quick write above via the
+				// I2C_AQ_NO_ZERO_LEN quirk, so neither earlier probe can see a
+				// present device on those buses. Writing 0x00 to the LED-off
+				// register (0xB0) is harmless. SMBus-less adapters (e.g. i915
+				// gmbus) return EOPNOTSUPP here and are skipped, so no false
+				// positive is added on their buses.
+				probeBuf := []byte{0x00}
+				registerWrite := i2cSmbusIoctlData{
+					readWrite: I2C_SMBUS_WRITE,
+					command:   0xB0,
+					size:      I2C_SMBUS_BYTE_DATA,
+					data:      uintptr(unsafe.Pointer(&probeBuf[0])),
+				}
+				if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, fd.Fd(), I2C_SMBUS, uintptr(unsafe.Pointer(&registerWrite))); errno == 0 {
+					found = true
+				}
 			}
 		}
 		fd.Close()
