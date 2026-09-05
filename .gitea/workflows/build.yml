@@ -1,0 +1,93 @@
+name: Build and Publish Debian Package
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - 'dev'
+
+jobs:
+  determine-build-env:
+    uses: ./.gitea/workflows/determine-build-env.yml
+
+  build-debian-package:
+    needs: determine-build-env
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.determine-build-env.outputs.version }}
+      CHANNEL: ${{ needs.determine-build-env.outputs.channel }}
+      DEBIAN_BRANCH: ${{ needs.determine-build-env.outputs.debian_branch }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install tools
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+
+          apt-get update && \
+          apt-get install -y \
+            devscripts \
+            git-buildpackage \
+            debhelper \
+            git \
+            curl \
+            pbuilder \
+            golang-go && \
+          echo "MIRRORSITE=http://archive.ubuntu.com/ubuntu" > /etc/pbuilderrc
+
+      - name: Set up git branch
+        run: |
+          git config --global user.email "ci@lincmox.gitea"
+          git config --global user.name "Lincmox CI"
+          git checkout "${DEBIAN_BRANCH}"
+
+      - name: Generate changelog from commits
+        env:
+          DEBEMAIL: "ci@lincmox.gitea"
+          DEBFULLNAME: "Lincmox CI"
+        run: |
+          gbp dch \
+            --git-author \
+            --debian-branch="${DEBIAN_BRANCH}" \
+            --new-version="${VERSION}" \
+            --distribution=unstable
+
+      - name: Build Debian package
+        run: |
+          dpkg-buildpackage -us -uc
+          cp ../*.deb .
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: debian-packages
+          path: ./*.deb
+          retention-days: 1
+
+  push-to-registry:
+    needs:
+      - build-debian-package
+      - determine-build-env
+    uses: Lincmox/lincmox_shared_workflows/.gitea/workflows/push-to-registry.yml@main
+    with:
+      pkg_name: lincmox
+      version: ${{ needs.determine-build-env.outputs.version }}
+      channel: ${{ needs.determine-build-env.outputs.channel }}
+    secrets: inherit
+
+  publish-to-prod-repository:
+    needs:
+      - build-debian-package
+      - determine-build-env
+    if: needs.determine-build-env.outputs.channel == 'main'
+    uses: Lincmox/lincmox_shared_workflows/.gitea/workflows/publish-to-prod-repository.yml@main
+    with:
+      channel: ${{ needs.determine-build-env.outputs.channel }}
+      pkg_name: lincmox
+      version: ${{ needs.determine-build-env.outputs.version }}
+    secrets: inherit

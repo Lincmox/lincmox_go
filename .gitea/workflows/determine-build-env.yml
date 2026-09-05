@@ -1,0 +1,63 @@
+name: Determine Package version, Distribution channel and Debian Branch
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: "Package version"
+        value: ${{ jobs.determine.outputs.version }}
+      channel:
+        description: "Distribution channel (main or testing)"
+        value: ${{ jobs.determine.outputs.channel }}
+      debian_branch:
+        description: "Debian branch name"
+        value: ${{ jobs.determine.outputs.debian_branch }}
+
+jobs:
+  determine:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+      channel: ${{ steps.extract.outputs.channel }}
+      debian_branch: ${{ steps.extract.outputs.debian_branch }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine package version, distribution channel and debian branch
+        id: extract
+        run: |
+          REF_NAME="${{ gitea.ref_name }}"
+          
+          if [[ "${{ gitea.ref_type }}" == "tag" ]]; then
+            DEBIAN_BRANCH=$(git branch -r --contains "$REF_NAME" | grep -oE "(main|dev|master)" | head -1 || echo "dev")
+            VERSION=${REF_NAME#v}
+            VERSION=$(echo "$VERSION" | sed 's/-\(alpha\|beta\|rc\)/~\1/g')
+            
+            if [[ "$VERSION" == *"~alpha"* ]] || [[ "$VERSION" == *"~beta"* ]] || [[ "$VERSION" == *"~rc"* ]] || [[ "$VERSION" == *"~dev"* ]] || [[ "$VERSION" == *".dev"* ]]; then
+              CHANNEL="testing"
+            else
+              CHANNEL="main"
+            fi
+          else
+            DEBIAN_BRANCH="${{ gitea.ref_name }}"
+            BASE_VERSION=$(cat VERSION)
+            COMMIT_SHORT=$(git rev-parse --short HEAD)
+            VERSION="${BASE_VERSION}~dev+${COMMIT_SHORT}"
+            CHANNEL="testing"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "channel=$CHANNEL" >> $GITHUB_OUTPUT
+          echo "debian_branch=$DEBIAN_BRANCH" >> $GITHUB_OUTPUT
+          
+          echo "====== Version Extraction ======"
+          echo "REF_NAME: $REF_NAME"
+          echo "gitea.ref_type: ${{ gitea.ref_type }}"
+          echo "VERSION: $VERSION"
+          echo "CHANNEL: $CHANNEL"
+          echo "DEBIAN_BRANCH: $DEBIAN_BRANCH"
+          echo "================================"
