@@ -14,8 +14,20 @@ NoNewPrivileges=yes
 ProtectSystem=strict
 ProtectHome=yes
 PrivateTmp=yes
-# I2C device access
-DeviceAllow=/dev/i2c-* rw
+# I2C device access.
+# Note: use explicit device lines, not the /dev/i2c-* glob — the wildcard
+# form is not matched reliably by systemd's device controller, which then
+# enables a strict deny-all policy and breaks I2C auto-detection.
+DeviceAllow=/dev/i2c-0 rw
+DeviceAllow=/dev/i2c-1 rw
+DeviceAllow=/dev/i2c-2 rw
+DeviceAllow=/dev/i2c-3 rw
+DeviceAllow=/dev/i2c-4 rw
+DeviceAllow=/dev/i2c-5 rw
+DeviceAllow=/dev/i2c-6 rw
+DeviceAllow=/dev/i2c-7 rw
+DeviceAllow=/dev/i2c-8 rw
+DeviceAllow=/dev/i2c-9 rw
 RuntimeDirectory=lincmoxd
 RuntimeDirectoryMode=0755
 
