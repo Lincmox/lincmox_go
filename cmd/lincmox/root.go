@@ -20,6 +20,7 @@ type apiClientKey struct{}
 
 func newRootCmd() *cobra.Command {
 	var simulate bool
+	var verbose bool
 
 	cmd := &cobra.Command{
 		Use:   "lincmox",
@@ -67,6 +68,9 @@ Otherwise it drives the hardware directly.`,
 			if simulate {
 				opts = append(opts, lincstation.WithSimulate(true))
 			}
+			if verbose {
+				opts = append(opts, lincstation.WithVerbose())
+			}
 			dev, err := lincstation.NewDevice(opts...)
 			if err != nil {
 				return fmt.Errorf("failed to open device: %w", err)
@@ -78,6 +82,7 @@ Otherwise it drives the hardware directly.`,
 	}
 
 	cmd.PersistentFlags().BoolVar(&simulate, "simulate", false, "simulate hardware commands (no real I/O)")
+	cmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "enable verbose I2C logging")
 
 	cmd.AddCommand(
 		newLEDCmd(),
