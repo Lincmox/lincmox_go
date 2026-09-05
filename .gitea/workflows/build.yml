@@ -91,3 +91,4 @@ jobs:
       pkg_name: lincmox
       version: ${{ needs.determine-build-env.outputs.version }}
     secrets: inherit
+
