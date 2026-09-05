@@ -12,6 +12,7 @@ const I2C_SLAVE = 0x0703
 
 const (
 	I2C_SMBUS           = 0x0720
+	I2C_SMBUS_QUICK     = 0
 	I2C_SMBUS_WRITE     = 0
 	I2C_SMBUS_READ      = 1
 	I2C_SMBUS_BYTE_DATA = 2
@@ -86,7 +87,7 @@ func detectBus(verbose bool) (int, error) {
 			continue
 		}
 
-		// Probe via a real I2C_RDWR ioctl write. This forces the host controller to
+		// First try a real I2C_RDWR write. This forces the host controller to
 		// issue a START + address + write on the bus and wait for the slave's ACK.
 		// If no device responds at 0x26 the kernel returns EREMOTEIO/EIO, so a
 		// bus with a stray device at another address (or a controller that ACKs
@@ -105,12 +106,31 @@ func detectBus(verbose bool) (int, error) {
 			msgs:  &msgs[0],
 			nmsgs: 1,
 		}
-		_, _, errno = syscall.Syscall(syscall.SYS_IOCTL, fd.Fd(), I2C_RDWR, uintptr(unsafe.Pointer(&data)))
+
+		found := false
+		if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, fd.Fd(), I2C_RDWR, uintptr(unsafe.Pointer(&data))); errno == 0 {
+			found = true
+		} else {
+			// Fall back to a SMBus "send byte" (quick write) probe, the same
+			// mechanism i2cdetect uses by default. Some slave devices ACK only a
+			// bare START + address + W with no data byte, and would otherwise be
+			// missed by the I2C_RDWR write above. This path still performs a real
+			// bus transaction so it keeps the false-positive protection.
+			smbus := i2cSmbusIoctlData{
+				readWrite: I2C_SMBUS_WRITE,
+				command:   0,
+				size:      I2C_SMBUS_QUICK,
+				data:      0,
+			}
+			if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, fd.Fd(), I2C_SMBUS, uintptr(unsafe.Pointer(&smbus))); errno == 0 {
+				found = true
+			}
+		}
 		fd.Close()
 
-		if errno == 0 {
+		if found {
 			if verbose {
-				fmt.Printf("[I2C] Auto-detected device at bus %d (ioctl probe)\n", bus)
+				fmt.Printf("[I2C] Auto-detected device at bus %d\n", bus)
 			}
 			return bus, nil
 		}
