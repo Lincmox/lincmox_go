@@ -198,7 +198,7 @@ func newLEDBlinkCmd(_ string, led lincstation.LED, apiBase string) *cobra.Comman
 			}
 
 			if isAPIMode(cmd) {
-				return ledAPIRequest(cmd, "POST", apiBase+"/blink", map[string]string{"blink": blinkStr})
+				return ledAPIRequest(cmd, "POST", apiBase+"/blink", map[string]bool{"blink": blink})
 			}
 
 			dev := deviceFromCtx(cmd)
