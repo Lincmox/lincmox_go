@@ -72,14 +72,31 @@ func detectBus(verbose bool) (int, error) {
 			continue
 		}
 
-		// Perform a zero-length write or 1-byte write (register address only) to probe
-		// if the device actually ACKs. I2C_SLAVE ioctl alone just configures the local driver.
-		_, err = fd.Write([]byte{0x00})
+		// Probe via a real I2C_RDWR ioctl write. This forces the host controller to
+		// issue a START + address + write on the bus and wait for the slave's ACK.
+		// If no device responds at 0x26 the kernel returns EREMOTEIO/EIO, so a
+		// bus with a stray device at another address (or a controller that ACKs
+		// reads on an idle bus) will correctly be rejected.
+		// A plain fd.Read() is unreliable here: several Linux I2C drivers succeed
+		// on a read even when no slave ACKs, producing a false positive on the
+		// first bus scanned.
+		buf := []byte{0x00}
+		msgs := []i2cMsg{{
+			addr:  uint16(i2cAddress),
+			flags: 0,
+			len:   uint16(len(buf)),
+			buf:   uintptr(unsafe.Pointer(&buf[0])),
+		}}
+		data := i2cRdwrIoctlData{
+			msgs:  &msgs[0],
+			nmsgs: 1,
+		}
+		_, _, errno = syscall.Syscall(syscall.SYS_IOCTL, fd.Fd(), I2C_RDWR, uintptr(unsafe.Pointer(&data)))
 		fd.Close()
 
-		if err == nil {
+		if errno == 0 {
 			if verbose {
-				fmt.Printf("[I2C] Auto-detected device at bus %d\n", bus)
+				fmt.Printf("[I2C] Auto-detected device at bus %d (ioctl probe)\n", bus)
 			}
 			return bus, nil
 		}
