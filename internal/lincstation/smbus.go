@@ -67,9 +67,17 @@ func detectBus(verbose bool) (int, error) {
 		}
 
 		_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, fd.Fd(), I2C_SLAVE, uintptr(i2cAddress))
+		if errno != 0 {
+			fd.Close()
+			continue
+		}
+
+		// Perform a zero-length write or 1-byte write (register address only) to probe
+		// if the device actually ACKs. I2C_SLAVE ioctl alone just configures the local driver.
+		_, err = fd.Write([]byte{0x00})
 		fd.Close()
 
-		if errno == 0 {
+		if err == nil {
 			if verbose {
 				fmt.Printf("[I2C] Auto-detected device at bus %d\n", bus)
 			}
