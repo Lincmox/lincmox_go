@@ -288,8 +288,8 @@ This project uses [Semantic Versioning](https://semver.org/) with Conventional C
 
 **Release tags:**
 ```bash
-git tag v1.0.0      # stable release
-git tag v1.0.0-rc1  # release candidate (→ testing channel)
+git tag v2.0.0      # stable release
+git tag v2.0.0-rc1  # release candidate (→ testing channel)
 ```
 
 ---
