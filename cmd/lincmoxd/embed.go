@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/lincmox/lincmox/internal/web"
+	"github.com/lincmox/lincmox/web"
 )
 
 // webUI returns a file system rooted at web/dist for serving the Web UI.
