@@ -10,6 +10,20 @@ import (
 // I2C_SLAVE is the ioctl command to set the I2C slave address.
 const I2C_SLAVE = 0x0703
 
+const (
+	I2C_SMBUS           = 0x0720
+	I2C_SMBUS_WRITE     = 0
+	I2C_SMBUS_READ      = 1
+	I2C_SMBUS_BYTE_DATA = 2
+)
+
+type i2cSmbusIoctlData struct {
+	readWrite byte
+	command   byte
+	size      uint32
+	data      uintptr
+}
+
 // smbusDevice implements i2cBus using Linux I2C ioctl.
 type smbusDevice struct {
 	fd      *os.File
@@ -104,26 +118,39 @@ func detectBus(verbose bool) (int, error) {
 	return 0, ErrBusNotFound
 }
 
-// ReadByte reads a single byte from the given register.
+// ReadByte reads a single byte from the given register using SMBUS ioctl.
 func (d *smbusDevice) ReadByte(reg byte) (byte, error) {
-	var val byte
-	buf := []byte{reg}
-	_, err := d.fd.Write(buf)
-	if err != nil {
-		return 0, err
+	buf := make([]byte, 34)
+	args := i2cSmbusIoctlData{
+		readWrite: I2C_SMBUS_READ,
+		command:   reg,
+		size:      I2C_SMBUS_BYTE_DATA,
+		data:      uintptr(unsafe.Pointer(&buf[0])),
 	}
-	_, err = d.fd.Read([]byte{val})
-	if err != nil {
-		return 0, err
+
+	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, d.fd.Fd(), I2C_SMBUS, uintptr(unsafe.Pointer(&args)))
+	if errno != 0 {
+		return 0, errno
 	}
-	return val, nil
+	return buf[0], nil
 }
 
-// WriteByte writes a single byte to the given register.
+// WriteByte writes a single byte to the given register using SMBUS ioctl.
 func (d *smbusDevice) WriteByte(reg, value byte) error {
-	buf := []byte{reg, value}
-	_, err := d.fd.Write(buf)
-	return err
+	buf := make([]byte, 34)
+	buf[0] = value
+	args := i2cSmbusIoctlData{
+		readWrite: I2C_SMBUS_WRITE,
+		command:   reg,
+		size:      I2C_SMBUS_BYTE_DATA,
+		data:      uintptr(unsafe.Pointer(&buf[0])),
+	}
+
+	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, d.fd.Fd(), I2C_SMBUS, uintptr(unsafe.Pointer(&args)))
+	if errno != 0 {
+		return errno
+	}
+	return nil
 }
 
 // Close closes the I2C device file.
