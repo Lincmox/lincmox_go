@@ -53,7 +53,9 @@ type Device struct {
 
 // NewDevice creates a new Device with the given options.
 func NewDevice(opts ...DeviceOption) (*Device, error) {
-	var options DeviceOptions
+	options := DeviceOptions{
+		busID: -1, // -1 means auto-detect
+	}
 	for _, opt := range opts {
 		opt(&options)
 	}
