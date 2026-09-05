@@ -280,7 +280,7 @@
         .card-title svg { width: 16px; height: 16px; color: hsl(var(--muted-foreground)); flex-shrink: 0; }
         .card-description { font-size: 0.8rem; color: hsl(var(--muted-foreground)); }
 
-        .card-wide { grid-column: span 2; }
+        .card-wide { grid-column: 1 / -1; }
 
         .placeholder { color: hsl(var(--muted-foreground)); font-size: 0.85rem; text-align: center; padding: 20px 0; }
 
@@ -387,8 +387,8 @@
             color: hsl(var(--card-foreground));
         }
 
-        .led-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-        .led-actions .btn { padding: 0 0.75rem; }
+        .led-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
+        .led-actions .btn { padding: 0 0.25rem; width: 100%; font-size: 0.75rem; }
 
         .color-dots { display: flex; gap: 6px; align-items: center; }
         .color-dot {
@@ -404,6 +404,78 @@
         .color-white { background: #ffffff; border-color: hsl(var(--border)); }
         .color-red { background: hsl(var(--destructive)); }
         .color-orange { background: hsl(var(--primary)); }
+
+        
+        /* =========================================================
+           WIREFRAME
+           ========================================================= */
+        .linc-wireframe {
+            display: flex; justify-content: center; padding: 20px 0;
+        }
+        .linc-body {
+            width: 100%; max-width: 600px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3), inset 0 2px 5px rgba(255,255,255,0.05);
+            display: flex; flex-direction: column;
+            border: 1px solid #000;
+        }
+        [data-theme="light"] .linc-body {
+            background: #2a2a2a; border-color: #222;
+        }
+        .linc-top {
+            height: 70px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding: 0 30px 15px;
+        }
+        .linc-leds-center { display: flex; gap: 14px; margin-left: 80px; }
+        .linc-leds-right { display: flex; }
+        .wireframe-led-wrapper {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            cursor: pointer; padding: 4px; border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .wireframe-led-wrapper:hover { background: rgba(255,255,255,0.05); }
+        .wireframe-led {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #333; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .wf-label {
+            font-size: 0.55rem; color: #777; font-family: var(--font-mono); font-weight: 600;
+            transition: color 0.2s;
+        }
+        .wireframe-led-wrapper:hover .wf-label { color: hsl(var(--primary)); }
+        
+        .linc-bottom {
+            height: 28px;
+            background: linear-gradient(to bottom, #d4d4d8, #94a3b8);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.4);
+            border-top: 1px solid #111;
+        }
+        [data-theme="dark"] .linc-bottom {
+            background: linear-gradient(to bottom, #52525b, #27272a);
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.05);
+        }
+        .wireframe-strip {
+            width: 85%; height: 7px; border-radius: 4px;
+            background: #555;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .wf-active { background: rgba(255,255,255,0.1) !important; outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+        
+        @keyframes blink-anim { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+        .wf-blink { animation: blink-anim 1s infinite; }
+        
+        .dynamic-panel { animation: slideIn 0.2s ease-out; }
+        
+        /* Hide old sections just in case */
+        .old-led-strip { display: none; }
 
         /* =========================================================
            STATUS PANEL
@@ -480,11 +552,36 @@
         ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
 
-        /* =========================================================
+        
+        .wireframe-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px;
+            min-height: 200px;
+        }
+        .linc-wireframe {
+            flex: 1;
+            min-width: 320px;
+        }
+        @media (max-width: 900px) {
+            .wireframe-container {
+                grid-template-columns: 1fr;
+            }
+            #dynamicControlPanel {
+                border-left: none !important;
+                border-top: 1px solid hsl(var(--border));
+                padding-left: 0 !important;
+                padding-top: 1.25rem;
+                width: 100% !important;
+            }
+        }
+/* =========================================================
            RESPONSIVE
            ========================================================= */
         @media (max-width: 900px) {
-            .card-wide { grid-column: span 1; }
+            .card-wide { grid-column: 1 / -1; }
         }
         @media (max-width: 600px) {
             .main-grid { grid-template-columns: 1fr; padding: 16px; }
@@ -521,6 +618,45 @@
     </header>
 
     <div class="main-grid">
+        <!-- Wireframe & Contrôles -->
+        <section class="card card-wide">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7 6 8 6 8s6-1 6-8z"/><path d="M10 20h4"/><path d="M12 20v1"/></svg>
+                    Contrôle Interactif
+                </h2>
+                <p class="card-description">Cliquez sur une LED ou sur le bandeau du LincStation pour ajuster ses paramètres.</p>
+            </div>
+
+            <div class="wireframe-container">
+            <div class="linc-wireframe" style="width: 100%; display: flex; justify-content: center; align-items: center; padding: 20px;">
+                <div class="linc-body">
+                    <div class="linc-top">
+                        <div class="linc-leds-center">
+                            <div class="wireframe-led-wrapper wf-target" data-target="sata1"><div class="wireframe-led" id="wf-sata1"></div><span class="wf-label">S1</span></div>
+                            <div class="wireframe-led-wrapper wf-target" data-target="sata2"><div class="wireframe-led" id="wf-sata2"></div><span class="wf-label">S2</span></div>
+                            <div class="wireframe-led-wrapper wf-target" data-target="nvme1"><div class="wireframe-led" id="wf-nvme1"></div><span class="wf-label">N1</span></div>
+                            <div class="wireframe-led-wrapper wf-target" data-target="nvme2"><div class="wireframe-led" id="wf-nvme2"></div><span class="wf-label">N2</span></div>
+                            <div class="wireframe-led-wrapper wf-target" data-target="nvme3"><div class="wireframe-led" id="wf-nvme3"></div><span class="wf-label">N3</span></div>
+                            <div class="wireframe-led-wrapper wf-target" data-target="nvme4"><div class="wireframe-led" id="wf-nvme4"></div><span class="wf-label">N4</span></div>
+                            <div class="wireframe-led-wrapper wf-target" data-target="network"><div class="wireframe-led" id="wf-network"></div><span class="wf-label">NET</span></div>
+                        </div>
+                        <div class="linc-leds-right">
+                            <div class="wireframe-led-wrapper wf-target" data-target="power"><div class="wireframe-led" id="wf-power"></div><span class="wf-label">PWR</span></div>
+                        </div>
+                    </div>
+                    <div class="linc-bottom wf-target" data-target="strip">
+                        <div class="wireframe-strip" id="wf-strip"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dynamicControlPanel" class="dynamic-panel" style="display:none; background: transparent; border-left: 1px solid hsl(var(--border)); padding-left: 1.25rem; width: 320px; flex-shrink: 0; box-sizing: border-box;">
+                <!-- Filled dynamically by JS -->
+            </div>
+            </div>
+        </section>
+
         <!-- Statut -->
         <section class="card">
             <div class="card-header">
@@ -532,65 +668,6 @@
             </div>
             <div class="status-panel" id="statusPanel">
                 <div class="placeholder">Chargement du statut…</div>
-            </div>
-        </section>
-
-        <!-- LEDs -->
-        <section class="card card-wide">
-            <div class="card-header">
-                <h2 class="card-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7 6 8 6 8s6-1 6-8z"/><path d="M10 20h4"/><path d="M12 20v1"/></svg>
-                    LEDs
-                </h2>
-                <p class="card-description">Contrôle individuel des LEDs de la LincStation N1.</p>
-            </div>
-            <div class="led-grid" id="ledGrid"></div>
-        </section>
-
-        <!-- Strip -->
-        <section class="card">
-            <div class="card-header">
-                <h2 class="card-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-                    Bandeau LED (Strip)
-                </h2>
-                <p class="card-description">Animation, couleurs et luminosité du bandeau.</p>
-            </div>
-
-            <div class="row">
-                <span class="label">Animation</span>
-                <select id="stripAnim" class="input" style="flex:1;">
-                    <option value="off">Off</option>
-                    <option value="breath">Breath (respiration)</option>
-                    <option value="loop">Loop (boucle)</option>
-                </select>
-                <button id="btnAnim" class="btn btn-default">Appliquer</button>
-            </div>
-
-            <div class="row">
-                <span class="label">Luminosité</span>
-                <span class="value-badge" id="brightnessVal">128</span>
-                <input type="range" id="stripBrightness" min="0" max="255" value="128">
-            </div>
-
-            <div class="row">
-                <span class="label">Couleur unie</span>
-                <div class="swatch" id="colorSwatch"></div>
-                <input type="color" id="stripColor" class="color-input" value="#ff0000">
-            </div>
-
-            <div class="row">
-                <span class="label">Couleur Loop 1</span>
-                <input type="color" id="loop1Color" class="color-input" value="#00ff00">
-            </div>
-            <div class="row">
-                <span class="label">Couleur Loop 2</span>
-                <input type="color" id="loop2Color" class="color-input" value="#0000ff">
-            </div>
-
-            <div class="row">
-                <button id="btnStripApply" class="btn btn-success">Appliquer</button>
-                <button id="btnStripReset" class="btn btn-ghost" style="margin-left:auto;">Réinitialiser</button>
             </div>
         </section>
 
@@ -710,47 +787,195 @@
             setTimeout(() => el.remove(), 3500);
         }
 
-        // ---------- Led control ----------
-        function buildLedGrid() {
-            const grid = $('ledGrid');
-            grid.innerHTML = '';
-            LEDS.forEach(led => {
-                const card = document.createElement('div');
-                card.className = 'led-card';
-                card.innerHTML = `
-                    <div class="led-name">${led.name}</div>
-                    <div class="color-dots">
-                        ${COLORS.map(c => `<span class="color-dot ${c.cls}" data-color="${c.id}" title="${c.label}"></span>`).join('')}
+        // ---------- Wireframe & Control ----------
+
+        let currentState = {
+            power: { color: 'white', state: 'off' },
+            sata1: { color: 'white', state: 'off' },
+            sata2: { color: 'white', state: 'off' },
+            nvme1: { color: 'white', state: 'off' },
+            nvme2: { color: 'white', state: 'off' },
+            nvme3: { color: 'white', state: 'off' },
+            nvme4: { color: 'white', state: 'off' },
+            network: { color: 'white', state: 'off' },
+            strip: { color: '#ff0000', anim: 'off', brightness: 128, loop1: '#00ff00', loop2: '#0000ff' }
+        };
+
+        function updateWireframe() {
+            LEDS.forEach(l => {
+                const el = $('wf-' + l.id);
+                if (!el) return;
+                const s = currentState[l.id];
+                el.className = 'wireframe-led'; 
+                if (s.state === 'on' || s.state === 'blink') {
+                    const c = s.color === 'white' ? '#fff' : s.color === 'red' ? '#ef4444' : '#f97316';
+                    el.style.background = c;
+                    el.style.boxShadow = `0 0 8px ${c}`;
+                    if (s.state === 'blink') el.classList.add('wf-blink');
+                } else {
+                    el.style.background = '#333';
+                    el.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.8)';
+                }
+            });
+            const strip = currentState.strip;
+            const sel = $('wf-strip');
+            if (sel) {
+                sel.className = 'wireframe-strip';
+                if (strip.anim !== 'off') {
+                    sel.style.background = strip.color;
+                    sel.style.boxShadow = `0 0 10px ${strip.color}`;
+                    if (strip.anim === 'breath' || strip.anim === 'loop') sel.classList.add('wf-blink');
+                } else {
+                    sel.style.background = '#555';
+                    sel.style.boxShadow = 'none';
+                }
+            }
+        }
+
+        let activeTarget = null;
+
+        document.querySelectorAll('.wf-target').forEach(el => {
+            el.addEventListener('click', () => {
+                document.querySelectorAll('.wf-target').forEach(w => w.classList.remove('wf-active'));
+                el.classList.add('wf-active');
+                activeTarget = el.dataset.target;
+                renderControlPanel();
+            });
+        });
+
+        function renderControlPanel() {
+            const panel = $('dynamicControlPanel');
+            if (!activeTarget) { panel.style.display = 'none'; return; }
+            panel.style.display = 'block';
+            
+            if (activeTarget === 'strip') {
+                panel.innerHTML = `
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: hsl(var(--foreground));">Bandeau LED (Strip)</h3>
+                    <div class="row">
+                        <span class="label">Animation</span>
+                        <select id="stripAnim" class="input" style="flex:1;">
+                            <option value="off" ${currentState.strip.anim === 'off' ? 'selected' : ''}>Off</option>
+                            <option value="breath" ${currentState.strip.anim === 'breath' ? 'selected' : ''}>Breath (respiration)</option>
+                            <option value="loop" ${currentState.strip.anim === 'loop' ? 'selected' : ''}>Loop (boucle)</option>
+                        </select>
+                        <button id="btnAnim" class="btn btn-default">Appliquer</button>
                     </div>
-                    <div class="led-actions">
-                        <button class="btn btn-outline btn-sm" data-action="on">On</button>
-                        <button class="btn btn-outline btn-sm" data-action="off">Off</button>
-                        <button class="btn btn-outline btn-sm" data-action="blink">Blink</button>
+                    <div class="row">
+                        <span class="label">Luminosité</span>
+                        <span class="value-badge" id="brightnessVal">${currentState.strip.brightness}</span>
+                        <input type="range" id="stripBrightness" min="0" max="255" value="${currentState.strip.brightness}">
+                    </div>
+                    <div class="row">
+                        <span class="label">Couleur unie</span>
+                        <div class="swatch" id="colorSwatch" style="background:${currentState.strip.color}"></div>
+                        <input type="color" id="stripColor" class="color-input" value="${currentState.strip.color}">
+                    </div>
+                    <div class="row">
+                        <span class="label">Couleur Loop 1</span>
+                        <input type="color" id="loop1Color" class="color-input" value="${currentState.strip.loop1}">
+                    </div>
+                    <div class="row">
+                        <span class="label">Couleur Loop 2</span>
+                        <input type="color" id="loop2Color" class="color-input" value="${currentState.strip.loop2}">
+                    </div>
+                    <div class="row" style="margin-top: 16px;">
+                        <button id="btnStripApply" class="btn btn-success">Appliquer Bandeau</button>
+                        <button id="btnStripReset" class="btn btn-ghost" style="margin-left:auto;">Réinitialiser Strip</button>
                     </div>
                 `;
-                grid.appendChild(card);
+                
+                function hexToRgb(hex) {
+                    const n = parseInt(hex.slice(1), 16);
+                    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+                }
 
-                card.querySelectorAll('.color-dot').forEach(dot => {
+                $('stripColor').addEventListener('input', () => $('colorSwatch').style.background = $('stripColor').value);
+                $('stripBrightness').addEventListener('input', () => $('brightnessVal').textContent = $('stripBrightness').value);
+                
+                $('btnAnim').addEventListener('click', async () => {
+                    const anim = $('stripAnim').value;
+                    try {
+                        await api('/api/v1/strip/animation', { method: 'POST', body: { mode: anim } });
+                        currentState.strip.anim = anim;
+                        updateWireframe();
+                        toast('Animation appliquée', 'success');
+                    } catch (e) { toast('Erreur: ' + e.message, 'error'); }
+                });
+
+                $('btnStripApply').addEventListener('click', async () => {
+                    try {
+                        const col = $('stripColor').value;
+                        const loop1 = $('loop1Color').value;
+                        const loop2 = $('loop2Color').value;
+                        const br = parseInt($('stripBrightness').value);
+                        
+                        await api('/api/v1/strip/color', { method: 'POST', body: hexToRgb(col) });
+                        await api('/api/v1/strip/loop/1/color', { method: 'POST', body: hexToRgb(loop1) });
+                        await api('/api/v1/strip/loop/2/color', { method: 'POST', body: hexToRgb(loop2) });
+                        await api('/api/v1/strip/brightness', { method: 'POST', body: { value: br } });
+                        
+                        currentState.strip.color = col;
+                        currentState.strip.loop1 = loop1;
+                        currentState.strip.loop2 = loop2;
+                        currentState.strip.brightness = br;
+                        // For display, if it's not off, it will show the color
+                        if (currentState.strip.anim === 'off') currentState.strip.anim = 'breath'; // auto-on
+                        updateWireframe();
+                        toast('Strip appliqué', 'success');
+                    } catch (e) { toast('Erreur: ' + e.message, 'error'); }
+                });
+
+                $('btnStripReset').addEventListener('click', async () => {
+                    try {
+                        await api('/api/v1/reset', { method: 'POST', body: { mode: 'strip' } });
+                        toast('Strip réinitialisé', 'success');
+                    } catch (e) { toast('Erreur: ' + e.message, 'error'); }
+                });
+                
+            } else {
+                const led = LEDS.find(l => l.id === activeTarget);
+                panel.innerHTML = `
+                    <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: hsl(var(--foreground));">LED : ${led.name}</h3>
+                    <div class="color-dots" style="margin-bottom: 16px;">
+                        ${COLORS.map(c => `<span class="color-dot ${c.cls} ${currentState[led.id].color === c.id ? 'active' : ''}" data-color="${c.id}" title="${c.label}"></span>`).join('')}
+                    </div>
+                    <div class="led-actions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                        <button class="btn btn-outline btn-sm dyn-action" data-action="on">On</button>
+                        <button class="btn btn-outline btn-sm dyn-action" data-action="off">Off</button>
+                        <button class="btn btn-outline btn-sm dyn-action" data-action="blink">Blink</button>
+                        <button class="btn btn-outline btn-sm dyn-action" data-action="unblink">Stop Blink</button>
+                    </div>
+                `;
+                
+                panel.querySelectorAll('.color-dot').forEach(dot => {
                     dot.addEventListener('click', () => {
-                        selectedColors[led.id] = dot.dataset.color;
-                        card.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+                        currentState[led.id].color = dot.dataset.color;
+                        panel.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
                         dot.classList.add('active');
+                        // Update visual preview immediately
+                        updateWireframe();
                     });
                 });
-                card.querySelector('.color-dots .color-white').classList.add('active');
-
-                card.querySelectorAll('button[data-action]').forEach(btn => {
+                
+                panel.querySelectorAll('.dyn-action').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const action = btn.dataset.action;
-                        const color = selectedColors[led.id];
+                        const color = currentState[led.id].color;
                         btn.disabled = true;
                         try {
                             if (action === 'blink') {
                                 await api(`/api/v1/led/${led.path}/blink`, { method: 'POST', body: { blink: true } });
+                                currentState[led.id].state = 'blink';
+                            } else if (action === 'unblink') {
+                                await api(`/api/v1/led/${led.path}/blink`, { method: 'POST', body: { blink: false } });
+                                currentState[led.id].state = 'on'; // usually unblink leaves it on
                             } else {
                                 await api(`/api/v1/led/${led.path}/${action}`, { method: 'POST', body: { color } });
+                                currentState[led.id].state = action;
                             }
-                            toast(`${led.name}: ${action === 'on' ? 'allumée' : action === 'off' ? 'éteinte' : 'clignotement'}`, 'success');
+                            updateWireframe();
+                            const actionMsg = action === 'on' ? 'allumée' : action === 'off' ? 'éteinte' : action === 'blink' ? 'clignotement' : 'arrêt clignotement';
+                            toast(`${led.name}: ${actionMsg}`, 'success');
                         } catch (e) {
                             toast(`Erreur ${led.name}: ${e.message}`, 'error');
                         } finally {
@@ -758,53 +983,12 @@
                         }
                     });
                 });
-            });
+            }
         }
+        
+        // Initial setup
+        updateWireframe();
 
-        // ---------- Strip ----------
-        function hexToRgb(hex) {
-            const n = parseInt(hex.slice(1), 16);
-            return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
-        }
-
-        function updateColorSwatch() {
-            $('colorSwatch').style.background = $('stripColor').value;
-        }
-
-        $('stripColor').addEventListener('input', updateColorSwatch);
-        updateColorSwatch();
-
-        $('stripBrightness').addEventListener('input', () => {
-            $('brightnessVal').textContent = $('stripBrightness').value;
-        });
-
-        $('btnAnim').addEventListener('click', async () => {
-            try {
-                await api('/api/v1/strip/animation', { method: 'POST', body: { mode: $('stripAnim').value } });
-                toast('Animation appliquée', 'success');
-            } catch (e) { toast('Erreur: ' + e.message, 'error'); }
-        });
-
-        $('btnStripApply').addEventListener('click', async () => {
-            try {
-                const col = hexToRgb($('stripColor').value);
-                const loop1 = hexToRgb($('loop1Color').value);
-                const loop2 = hexToRgb($('loop2Color').value);
-                await api('/api/v1/strip/color', { method: 'POST', body: col });
-                await api('/api/v1/strip/loop/1/color', { method: 'POST', body: loop1 });
-                await api('/api/v1/strip/loop/2/color', { method: 'POST', body: loop2 });
-                await api('/api/v1/strip/brightness', { method: 'POST', body: { value: parseInt($('stripBrightness').value) } });
-                $('brightnessVal').textContent = $('stripBrightness').value;
-                toast('Strip appliqué', 'success');
-            } catch (e) { toast('Erreur: ' + e.message, 'error'); }
-        });
-
-        $('btnStripReset').addEventListener('click', async () => {
-            try {
-                await api('/api/v1/reset', { method: 'POST', body: { mode: 'strip' } });
-                toast('Strip réinitialisé', 'success');
-            } catch (e) { toast('Erreur: ' + e.message, 'error'); }
-        });
 
         // ---------- Monitors ----------
         async function refreshMonitors() {
@@ -878,7 +1062,7 @@
         }
 
         // ---------- Init ----------
-        buildLedGrid();
+        
         refreshStatus();
         refreshMonitors();
         setInterval(refreshStatus, 5000);
