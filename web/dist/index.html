@@ -1,82 +1,252 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LincMox — Contrôle LED</title>
     <style>
+        /* =========================================================
+           DESIGN TOKENS — shadcn/ui style (HSL), orange brand
+           ========================================================= */
         :root {
-            --bg: #0d1117;
-            --bg-alt: #161b22;
-            --bg-elev: #1c2128;
-            --border: #30363d;
-            --text: #c9d1d9;
-            --text-dim: #8b949e;
-            --text-bright: #f0f6fc;
-            --accent: #58a6ff;
-            --accent-dim: #1f6feb;
-            --green: #3fb950;
-            --red: #f85149;
-            --orange: #f0883e;
-            --yellow: #d29922;
-            --radius: 8px;
+            --background: 0 0% 100%;
+            --foreground: 240 10% 3.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 240 10% 3.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 240 10% 3.9%;
+            --primary: 30 96% 45%;
+            --primary-foreground: 0 0% 100%;
+            --secondary: 240 4.8% 95.9%;
+            --secondary-foreground: 240 5.9% 10%;
+            --muted: 240 4.8% 95.9%;
+            --muted-foreground: 240 3.8% 46.1%;
+            --accent: 30 96% 45%;
+            --accent-foreground: 0 0% 100%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 0 0% 98%;
+            --success: 142 71% 45%;
+            --success-foreground: 0 0% 98%;
+            --border: 240 5.9% 90%;
+            --input: 240 5.9% 90%;
+            --ring: 30 96% 45%;
+            --radius: 0.5rem;
+            --header-height: 60px;
+            --transition: 0.15s ease;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
         }
 
-        * { box-sizing: border-box; }
+        [data-theme="dark"] {
+            --background: 240 10% 3.9%;
+            --foreground: 0 0% 98%;
+            --card: 240 10% 3.9%;
+            --card-foreground: 0 0% 98%;
+            --popover: 240 10% 3.9%;
+            --popover-foreground: 0 0% 98%;
+            --primary: 31 87% 53%;
+            --primary-foreground: 0 0% 100%;
+            --secondary: 240 3.7% 15.9%;
+            --secondary-foreground: 0 0% 98%;
+            --muted: 240 3.7% 15.9%;
+            --muted-foreground: 240 5% 64.9%;
+            --accent: 31 87% 53%;
+            --accent-foreground: 0 0% 100%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 0 0% 98%;
+            --success: 142 69% 58%;
+            --success-foreground: 0 0% 98%;
+            --border: 240 3.7% 15.9%;
+            --input: 240 3.7% 15.9%;
+            --ring: 31 87% 53%;
+        }
+
+        /* =========================================================
+           BASE
+           ========================================================= */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.5;
+            font-family: var(--font-sans);
+            font-size: 15px;
+            line-height: 1.6;
+            color: hsl(var(--foreground));
+            background: hsl(var(--background));
+            -webkit-font-smoothing: antialiased;
+            transition: background var(--transition), color var(--transition);
+            min-height: 100vh;
         }
 
-        a { color: var(--accent); text-decoration: none; }
+        .text-muted { color: hsl(var(--muted-foreground)); }
 
-        header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 14px 24px;
-            background: var(--bg-alt);
-            border-bottom: 1px solid var(--border);
+        /* =========================================================
+           HEADER
+           ========================================================= */
+        .site-header {
             position: sticky;
             top: 0;
-            z-index: 10;
-        }
-
-        header .logo {
-            font-family: monospace;
-            font-weight: 700;
-            color: var(--accent);
-            font-size: 1.1rem;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-
-        header .conn {
-            margin-left: auto;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: hsl(var(--background) / 0.85);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid hsl(var(--border));
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
-            color: var(--text-dim);
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0 1.5rem;
+            z-index: 100;
+            transition: background var(--transition), border-color var(--transition);
         }
 
-        .dot {
-            width: 10px;
-            height: 10px;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            min-width: 0;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+            color: hsl(var(--foreground));
+            white-space: nowrap;
+        }
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius);
+            background: hsl(var(--primary) / 0.12);
+            color: hsl(var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .brand-logo svg { width: 16px; height: 16px; }
+        .brand-info { display: flex; flex-direction: column; line-height: 1.2; }
+        .brand-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+        .brand-subtitle {
+            font-size: 0.68rem;
+            font-weight: 400;
+            color: hsl(var(--muted-foreground));
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .conn-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: hsl(var(--muted-foreground));
+            white-space: nowrap;
+        }
+        .conn-pill .dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: var(--text-dim);
+            background: hsl(var(--muted-foreground));
             display: inline-block;
         }
-        .dot.ok { background: var(--green); box-shadow: 0 0 8px var(--green); }
-        .dot.err { background: var(--red); box-shadow: 0 0 8px var(--red); }
+        .conn-pill .dot.ok { background: hsl(var(--success)); box-shadow: 0 0 6px hsl(var(--success) / 0.6); }
+        .conn-pill .dot.err { background: hsl(var(--destructive)); box-shadow: 0 0 6px hsl(var(--destructive) / 0.6); }
 
+        .theme-toggle {
+            width: 2.25rem;
+            height: 2.25rem;
+            padding: 0;
+        }
+        .theme-toggle svg { width: 16px; height: 16px; }
+        [data-theme="light"] .icon-sun  { display: none; }
+        [data-theme="dark"]  .icon-moon { display: none; }
+
+        /* =========================================================
+           BUTTON (shadcn/ui)
+           ========================================================= */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.375rem;
+            height: 2.25rem;
+            padding: 0 1rem;
+            border-radius: calc(var(--radius) - 2px);
+            border: 1px solid transparent;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            font-weight: 500;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background-color var(--transition), color var(--transition),
+                        border-color var(--transition), box-shadow var(--transition), opacity var(--transition);
+        }
+        .btn:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+        }
+        .btn:disabled { opacity: 0.5; pointer-events: none; }
+
+        .btn-default { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+        .btn-default:hover { background: hsl(var(--primary) / 0.9); }
+
+        .btn-outline { background: hsl(var(--background)); border-color: hsl(var(--input)); color: hsl(var(--foreground)); }
+        .btn-outline:hover { background: hsl(var(--accent) / 0.1); color: hsl(var(--accent)); }
+
+        .btn-ghost { background: transparent; color: hsl(var(--foreground)); }
+        .btn-ghost:hover { background: hsl(var(--accent) / 0.1); color: hsl(var(--accent)); }
+
+        .btn-success { background: hsl(var(--success)); color: hsl(var(--success-foreground)); }
+        .btn-success:hover { background: hsl(var(--success) / 0.9); }
+
+        .btn-destructive { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
+        .btn-destructive:hover { background: hsl(var(--destructive) / 0.9); }
+
+        .btn-sm { height: 2rem; padding: 0 0.75rem; font-size: 0.78rem; }
+        .btn-flex { flex: 1; }
+
+        /* =========================================================
+           BADGE (shadcn/ui)
+           ========================================================= */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            border-radius: 9999px;
+            border: 1px solid transparent;
+            padding: 0.125rem 0.625rem;
+            font-size: 0.72rem;
+            font-weight: 500;
+            line-height: 1.5;
+            white-space: nowrap;
+            transition: background var(--transition), color var(--transition), border-color var(--transition);
+        }
+        .badge-outline { border-color: hsl(var(--border)); color: hsl(var(--foreground)); }
+        .badge-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+        .badge-success { background: hsl(var(--success)); color: hsl(var(--success-foreground)); }
+        .badge-destructive { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
+
+        /* =========================================================
+           CARD (shadcn/ui)
+           ========================================================= */
         .main-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
             gap: 20px;
             padding: 24px;
             max-width: 1400px;
@@ -84,23 +254,112 @@
         }
 
         .card {
-            background: var(--bg-alt);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: calc(var(--radius) - 2px);
+            padding: 1.25rem;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+            transition: background var(--transition), border-color var(--transition);
         }
 
-        .card h2 {
-            margin: 0 0 16px;
-            font-size: 1.05rem;
-            color: var(--text-bright);
+        .card-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            margin-bottom: 1rem;
+        }
+        .card-title {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: hsl(var(--card-foreground));
+        }
+        .card-title svg { width: 16px; height: 16px; color: hsl(var(--muted-foreground)); flex-shrink: 0; }
+        .card-description { font-size: 0.8rem; color: hsl(var(--muted-foreground)); }
+
+        .card-wide { grid-column: span 2; }
+
+        .placeholder { color: hsl(var(--muted-foreground)); font-size: 0.85rem; text-align: center; padding: 20px 0; }
+
+        /* =========================================================
+           INPUT / SELECT / LABEL (shadcn/ui)
+           ========================================================= */
+        .label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: hsl(var(--foreground));
+            flex-shrink: 0;
         }
 
-        .card h2 small { color: var(--text-dim); font-weight: 400; font-size: 0.8rem; }
+        .input {
+            display: block;
+            height: 2.25rem;
+            width: 100%;
+            border-radius: calc(var(--radius) - 2px);
+            border: 1px solid hsl(var(--input));
+            background: transparent;
+            padding: 0 0.75rem;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            color: hsl(var(--foreground));
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+        .input::placeholder { color: hsl(var(--muted-foreground)); }
+        .input:focus-visible {
+            outline: none;
+            border-color: hsl(var(--ring));
+            box-shadow: 0 0 0 1px hsl(var(--ring));
+        }
 
+        select.input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1rem;
+            padding-right: 2rem;
+        }
+
+        input[type="range"] { accent-color: hsl(var(--primary)); flex: 1; min-width: 120px; height: 1.25rem; }
+
+        input[type="color"].color-input {
+            width: 42px;
+            height: 32px;
+            padding: 1px;
+            border-radius: 6px;
+            border: 1px solid hsl(var(--input));
+            background: hsl(var(--background));
+            cursor: pointer;
+        }
+
+        .value-badge {
+            background: hsl(var(--secondary));
+            border-radius: calc(var(--radius) - 2px);
+            padding: 3px 10px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: hsl(var(--foreground));
+        }
+
+        .swatch {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 1px solid hsl(var(--border));
+            background: #000;
+            flex-shrink: 0;
+        }
+
+        .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .row + .row { margin-top: 12px; }
+        .spacer { flex: 1; }
+
+        /* =========================================================
+           LED CARDS
+           ========================================================= */
         .led-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -108,126 +367,76 @@
         }
 
         .led-card {
-            background: var(--bg-elev);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 12px;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: calc(var(--radius) - 2px);
+            padding: 0.75rem;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+        .led-card:hover {
+            border-color: hsl(var(--ring));
+            box-shadow: 0 1px 4px rgb(0 0 0 / 0.06);
         }
 
-        .led-card .led-name {
+        .led-name {
             font-size: 0.85rem;
             font-weight: 600;
-            color: var(--text-bright);
+            color: hsl(var(--card-foreground));
         }
 
-        .led-card .led-actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
+        .led-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .led-actions .btn { padding: 0 0.75rem; }
 
-        .color-dots {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
+        .color-dots { display: flex; gap: 6px; align-items: center; }
         .color-dot {
             width: 18px;
             height: 18px;
             border-radius: 50%;
             border: 2px solid transparent;
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: transform 0.1s, box-shadow var(--transition);
         }
-        .color-dot:hover { transform: scale(1.2); }
-        .color-dot.active { border-color: var(--text-bright); }
-        .color-white { background: #ffffff; }
-        .color-red { background: #f85149; }
-        .color-orange { background: #f0883e; }
+        .color-dot:hover { transform: scale(1.15); }
+        .color-dot.active { border-color: hsl(var(--foreground)); box-shadow: 0 0 0 3px hsl(var(--primary) / 0.3); }
+        .color-white { background: #ffffff; border-color: hsl(var(--border)); }
+        .color-red { background: hsl(var(--destructive)); }
+        .color-orange { background: hsl(var(--primary)); }
 
-        button {
-            background: var(--accent-dim);
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 6px 12px;
-            font-size: 0.82rem;
-            cursor: pointer;
-            transition: background 0.15s, transform 0.05s;
-        }
-        button:hover { background: #2458a8; }
-        button:active { transform: scale(0.97); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        button.ghost {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-        }
-        button.ghost:hover { background: var(--bg-elev); }
-
-        button.success { background: var(--green); color: #04170a; }
-        button.success:hover { background: #2ea043; }
-
-        .row {
+        /* =========================================================
+           STATUS PANEL
+           ========================================================= */
+        .status-panel { display: flex; flex-direction: column; }
+        .status-line {
             display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .row + .row { margin-top: 10px; }
-
-        .spacer { flex: 1; }
-
-        label { font-size: 0.82rem; color: var(--text-dim); }
-
-        input[type="range"] {
-            flex: 1;
-            accent-color: var(--accent);
-            min-width: 120px;
-        }
-        input[type="number"], select {
-            background: var(--bg);
-            color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 6px 8px;
+            justify-content: space-between;
+            gap: 12px;
             font-size: 0.85rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid hsl(var(--border));
         }
+        .status-line:last-child { border-bottom: none; padding-bottom: 0; }
+        .status-line .k { color: hsl(var(--muted-foreground)); flex-shrink: 0; }
+        .status-line .v { color: hsl(var(--foreground)); font-weight: 500; text-align: right; }
 
-        .value-badge {
-            background: var(--bg-elev);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 3px 10px;
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: var(--accent);
-        }
-
-        .swatch {
-            width: 22px;
-            height: 22px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: #000;
-        }
-
+        /* =========================================================
+           MONITORS
+           ========================================================= */
         .monitor-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
+            gap: 12px;
+            padding: 0 0 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid hsl(var(--border));
         }
-        .monitor-item:last-child { border-bottom: none; }
-        .monitor-item .m-status { font-size: 0.8rem; font-weight: 600; }
-        .running { color: var(--green); }
-        .stopped { color: var(--text-dim); }
 
+        /* =========================================================
+           TOAST
+           ========================================================= */
         .toast-container {
             position: fixed;
             bottom: 20px;
@@ -235,147 +444,207 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            z-index: 100;
+            z-index: 200;
         }
         .toast {
-            background: var(--bg-elev);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--accent);
-            color: var(--text);
-            padding: 10px 14px;
-            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            color: hsl(var(--card-foreground));
+            padding: 0.75rem 1rem;
             font-size: 0.85rem;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
             animation: slideIn 0.2s;
             max-width: 340px;
         }
-        .toast.error { border-left-color: var(--red); }
-        .toast.success { border-left-color: var(--green); }
+        .toast::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: hsl(var(--ring));
+            flex-shrink: 0;
+        }
+        .toast.error::before { background: hsl(var(--destructive)); }
+        .toast.success::before { background: hsl(var(--success)); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        .status-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        /* =========================================================
+           SCROLLBAR
+           ========================================================= */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+
+        /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+        @media (max-width: 900px) {
+            .card-wide { grid-column: span 1; }
         }
-        .status-line { font-family: monospace; font-size: 0.9rem; }
-        .status-line .k { color: var(--text-dim); }
-        .status-line .v { color: var(--text-bright); }
-
-        .placeholder { color: var(--text-dim); font-size: 0.85rem; text-align: center; padding: 20px 0; }
-
         @media (max-width: 600px) {
             .main-grid { grid-template-columns: 1fr; padding: 16px; }
-            header { flex-wrap: wrap; }
+            .site-header { padding: 0 0.9rem; }
+            .brand-subtitle { display: none; }
+            .version-badge { display: none; }
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">LINCMOX</div>
-        <div style="font-size:0.85rem; color: var(--text-dim);">Contrôle LED de la LincStation N1</div>
-        <div class="conn">
-            <span class="dot" id="statusDot"></span>
-            <span id="statusText">Connexion…</span>
+    <header class="site-header">
+        <div class="header-left">
+            <a class="brand" href="/" title="LincMox">
+                <div class="brand-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                <div class="brand-info">
+                    <span class="brand-name">LINCMOX</span>
+                    <span class="brand-subtitle">Contrôle LED LincStation N1</span>
+                </div>
+            </a>
+        </div>
+        <div class="header-right">
+            <div class="conn-pill" title="État de la connexion au daemon">
+                <span class="dot" id="statusDot"></span>
+                <span id="statusText">Connexion…</span>
+            </div>
+            <span class="badge badge-outline version-badge" title="API">API v1</span>
+            <button id="theme-toggle" class="btn btn-outline theme-toggle" title="Basculer thème clair/sombre" aria-label="Basculer le thème">
+                <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
         </div>
     </header>
 
     <div class="main-grid">
         <!-- Statut -->
         <section class="card">
-            <h2><span>▣</span> Statut</h2>
+            <div class="card-header">
+                <h2 class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    Statut
+                </h2>
+                <p class="card-description">État du daemon et de la LincStation N1.</p>
+            </div>
             <div class="status-panel" id="statusPanel">
                 <div class="placeholder">Chargement du statut…</div>
             </div>
         </section>
 
         <!-- LEDs -->
-        <section class="card" style="grid-column: span 2;">
-            <h2><span>▣</span> LEDs</h2>
+        <section class="card card-wide">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7 6 8 6 8s6-1 6-8z"/><path d="M10 20h4"/><path d="M12 20v1"/></svg>
+                    LEDs
+                </h2>
+                <p class="card-description">Contrôle individuel des LEDs de la LincStation N1.</p>
+            </div>
             <div class="led-grid" id="ledGrid"></div>
         </section>
 
         <!-- Strip -->
         <section class="card">
-            <h2><span>▣</span> Bandeau LED (Strip)</h2>
+            <div class="card-header">
+                <h2 class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                    Bandeau LED (Strip)
+                </h2>
+                <p class="card-description">Animation, couleurs et luminosité du bandeau.</p>
+            </div>
 
             <div class="row">
-                <label>Animation</label>
-                <select id="stripAnim" style="flex:1;">
+                <span class="label">Animation</span>
+                <select id="stripAnim" class="input" style="flex:1;">
                     <option value="off">Off</option>
                     <option value="breath">Breath (respiration)</option>
                     <option value="loop">Loop (boucle)</option>
                 </select>
-                <button id="btnAnim">Appliquer</button>
+                <button id="btnAnim" class="btn btn-default">Appliquer</button>
             </div>
 
             <div class="row">
-                <label>Luminosité</label>
+                <span class="label">Luminosité</span>
                 <span class="value-badge" id="brightnessVal">128</span>
                 <input type="range" id="stripBrightness" min="0" max="255" value="128">
             </div>
 
             <div class="row">
-                <label>Couleur unie</label>
+                <span class="label">Couleur unie</span>
                 <div class="swatch" id="colorSwatch"></div>
-                <input type="color" id="stripColor" value="#ff0000" style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:6px; height:34px;">
+                <input type="color" id="stripColor" class="color-input" value="#ff0000">
             </div>
 
             <div class="row">
-                <label>Couleur Loop 1</label>
-                <input type="color" id="loop1Color" value="#00ff00">
+                <span class="label">Couleur Loop 1</span>
+                <input type="color" id="loop1Color" class="color-input" value="#00ff00">
             </div>
             <div class="row">
-                <label>Couleur Loop 2</label>
-                <input type="color" id="loop2Color" value="#0000ff">
+                <span class="label">Couleur Loop 2</span>
+                <input type="color" id="loop2Color" class="color-input" value="#0000ff">
             </div>
 
             <div class="row">
-                <button id="btnStripApply" class="success">Appliquer</button>
-                <button id="btnStripReset" class="ghost" style="margin-left:auto;">Réinitialiser</button>
+                <button id="btnStripApply" class="btn btn-success">Appliquer</button>
+                <button id="btnStripReset" class="btn btn-ghost" style="margin-left:auto;">Réinitialiser</button>
             </div>
         </section>
 
         <!-- Moniteurs -->
         <section class="card">
-            <h2><span>▣</span> Moniteurs</h2>
+            <div class="card-header">
+                <h2 class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    Moniteurs
+                </h2>
+                <p class="card-description">Surveillance réseau avec blink automatique.</p>
+            </div>
 
             <div class="monitor-item">
                 <div>
-                    <div style="font-size:0.9rem;">Réseau</div>
-                    <div style="font-size:0.75rem; color:var(--text-dim);">Blink quand le trafic dépasse le seuil</div>
+                    <div class="label" style="font-size:0.9rem;">Réseau</div>
+                    <div class="text-muted" style="font-size:0.78rem;">Blink quand le trafic dépasse le seuil</div>
                 </div>
-                <span class="m-status stopped" id="netMonitorStatus">Arrêté</span>
+                <span class="badge badge-secondary m-status" id="netMonitorStatus">Arrêté</span>
             </div>
 
             <div class="row">
-                <label>Interface</label>
-                <input type="text" id="netIface" value="eth0" style="flex:1;">
+                <span class="label">Interface</span>
+                <input type="text" id="netIface" class="input" value="eth0" style="flex:1;">
             </div>
             <div class="row">
-                <label>Intervalle (ms)</label>
-                <input type="number" id="netInterval" value="500" min="50" style="flex:1;">
+                <span class="label">Intervalle (ms)</span>
+                <input type="number" id="netInterval" class="input" value="500" min="50" style="flex:1;">
             </div>
             <div class="row">
-                <label>Seuil (octets)</label>
-                <input type="number" id="netThreshold" value="1024" min="0" style="flex:1;">
+                <span class="label">Seuil (octets)</span>
+                <input type="number" id="netThreshold" class="input" value="1024" min="0" style="flex:1;">
             </div>
             <div class="row">
-                <button id="btnNetEnable" class="success">Démarrer</button>
-                <button id="btnNetDisable" class="ghost">Arrêter</button>
+                <button id="btnNetEnable" class="btn btn-success">Démarrer</button>
+                <button id="btnNetDisable" class="btn btn-ghost">Arrêter</button>
             </div>
         </section>
 
         <!-- Réinitialisation -->
         <section class="card">
-            <h2><span>⎌</span> Réinitialisation</h2>
-            <p style="font-size:0.85rem; color:var(--text-dim);">Réinitialise les LEDs et/ou le bandeau LED à leur état d'origine.</p>
-            <div class="row">
-                <button id="btnResetLeds" class="ghost">LEDs seulement</button>
-                <button id="btnResetStrip" class="ghost">Strip seulement</button>
+            <div class="card-header">
+                <h2 class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    Réinitialisation
+                </h2>
+                <p class="card-description">Restaure les LEDs et/ou le bandeau à leur état d'origine.</p>
             </div>
             <div class="row">
-                <button id="btnResetFull" style="background:var(--red); flex:1;">Réinitialisation complète</button>
+                <button id="btnResetLeds" class="btn btn-outline btn-flex">LEDs seulement</button>
+                <button id="btnResetStrip" class="btn btn-outline btn-flex">Strip seulement</button>
+            </div>
+            <div class="row">
+                <button id="btnResetFull" class="btn btn-destructive btn-flex">Réinitialisation complète</button>
             </div>
         </section>
     </div>
@@ -385,15 +654,26 @@
     <script>
         const API = window.location.origin;
 
+        // ---------- Theme (shared with the docs site) ----------
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+        setTheme(localStorage.getItem('theme') || 'light');
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        });
+
         const LEDS = [
-            { id: 'power',   name: 'Power' },
-            { id: 'sata1',   name: 'SATA 1' },
-            { id: 'sata2',   name: 'SATA 2' },
-            { id: 'nvme1',   name: 'NVMe 1' },
-            { id: 'nvme2',   name: 'NVMe 2' },
-            { id: 'nvme3',   name: 'NVMe 3' },
-            { id: 'nvme4',   name: 'NVMe 4' },
-            { id: 'network', name: 'Network' },
+            { id: 'power',   path: 'power',   name: 'Power' },
+            { id: 'sata1',   path: 'sata/1',  name: 'SATA 1' },
+            { id: 'sata2',   path: 'sata/2',  name: 'SATA 2' },
+            { id: 'nvme1',   path: 'nvme/1',  name: 'NVMe 1' },
+            { id: 'nvme2',   path: 'nvme/2',  name: 'NVMe 2' },
+            { id: 'nvme3',   path: 'nvme/3',  name: 'NVMe 3' },
+            { id: 'nvme4',   path: 'nvme/4',  name: 'NVMe 4' },
+            { id: 'network', path: 'network', name: 'Network' },
         ];
 
         const COLORS = [
@@ -443,9 +723,9 @@
                         ${COLORS.map(c => `<span class="color-dot ${c.cls}" data-color="${c.id}" title="${c.label}"></span>`).join('')}
                     </div>
                     <div class="led-actions">
-                        <button class="ghost" data-action="on">On</button>
-                        <button class="ghost" data-action="off">Off</button>
-                        <button class="ghost" data-action="blink">Blink</button>
+                        <button class="btn btn-outline btn-sm" data-action="on">On</button>
+                        <button class="btn btn-outline btn-sm" data-action="off">Off</button>
+                        <button class="btn btn-outline btn-sm" data-action="blink">Blink</button>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -466,9 +746,9 @@
                         btn.disabled = true;
                         try {
                             if (action === 'blink') {
-                                await api(`/api/v1/led/${led.id}/blink`, { method: 'POST', body: { blink: true } });
+                                await api(`/api/v1/led/${led.path}/blink`, { method: 'POST', body: { blink: true } });
                             } else {
-                                await api(`/api/v1/led/${led.id}/${action}`, { method: 'POST', body: { color } });
+                                await api(`/api/v1/led/${led.path}/${action}`, { method: 'POST', body: { color } });
                             }
                             toast(`${led.name}: ${action === 'on' ? 'allumée' : action === 'off' ? 'éteinte' : 'clignotement'}`, 'success');
                         } catch (e) {
@@ -534,7 +814,7 @@
                 const netRunning = running.includes('network');
                 const el = $('netMonitorStatus');
                 el.textContent = netRunning ? 'Actif' : 'Arrêté';
-                el.className = 'm-status ' + (netRunning ? 'running' : 'stopped');
+                el.className = 'badge m-status ' + (netRunning ? 'badge-success' : 'badge-secondary');
             } catch (e) { /* ignore */ }
         }
 
@@ -584,9 +864,9 @@
                 $('statusText').textContent = 'Connecté';
                 const panel = $('statusPanel');
                 panel.innerHTML = `
-                    <div class="status-line"><span class="k">Statut :</span> <span class="v">${data.status}</span></div>
-                    <div class="status-line"><span class="k">Appareil :</span> <span class="v">${data.device}</span></div>
-                    <div class="status-line"><span class="k">Moniteurs actifs :</span> <span class="v">${(data.monitors && data.monitors.running) ? data.monitors.running.join(', ') || 'aucun' : 'aucun'}</span></div>
+                    <div class="status-line"><span class="k">Statut</span><span class="v">${data.status}</span></div>
+                    <div class="status-line"><span class="k">Appareil</span><span class="v">${data.device}</span></div>
+                    <div class="status-line"><span class="k">Moniteurs actifs</span><span class="v">${(data.monitors && data.monitors.running) ? data.monitors.running.join(', ') || 'aucun' : 'aucun'}</span></div>
                 `;
                 return data;
             } catch (e) {
